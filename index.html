@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GR SPORTS | Rendimiento, Clases y Entrenamientos</title>
+  <!-- Google Fonts: Teko (Títulos potentes deportivos) y Rajdhani (Cuerpo tecnológico y afilado) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="#" class="nav-brand">
+        <img src="assets/logo.jpg" alt="Logo GR SPORTS">
+        <div class="brand-title">GR <span>SPORTS</span></div>
+      </a>
+
+      <!-- Menu links a los bloques solicitados -->
+      <nav>
+        <ul class="nav-links">
+          <li><a href="#quienes-somos">Quiénes Somos</a></li>
+          <li><a href="#servicios-gimnasios">Servicios Gimnasios</a></li>
+          <li><a href="#actividades-verano">Actividades Verano</a></li>
+          <li><a href="#entrenamientos-personales">Entrenamiento Personal</a></li>
+        </ul>
+      </nav>
+
+      <!-- Esquina Superior Derecha: Login / Perfil -->
+      <div class="nav-actions">
+        <!-- Botón Administrador (visible si rol admin) -->
+        <button id="nav-admin-btn" class="btn btn-outline" style="display:none; padding: 6px 14px; font-size: 1.1rem; border-color:#f59e0b; color:#f59e0b;" onclick="showAdminPanel()">
+          Admin Panel <span id="admin-badge-count" style="color:#ef4444; font-weight:bold; margin-left:4px;"></span>
+        </button>
+
+        <!-- Botón Iniciar Sesión / Registro -->
+        <button id="nav-auth-btn" class="btn btn-primary" onclick="openModal('modal-auth')">
+          Acceder / Registro
+        </button>
+
+        <!-- Menú de Usuario Logueado -->
+        <div id="user-menu" style="display:none; align-items:center; gap: 10px;">
+          <div class="user-badge" onclick="showUserProfile()">
+            <div class="user-avatar-circle">👤</div>
+            <span id="logged-user-name" style="font-weight:700;">Usuario</span>
+          </div>
+          <button class="btn btn-outline" style="padding: 6px 12px; font-size: 1rem;" onclick="logout()">Salir</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-content">
+        <div class="angular-badge">Rendimiento, Salud & Deporte Para Todos</div>
+        <h1>LLEVA TU ENTRENAMIENTO AL <span>SIGUIENTE NIVEL</span></h1>
+        <p>Especialistas en clases dirigidas, entrenamientos personales adaptados y dinamización deportiva en gimnasios, eventos y campus.</p>
+        <div class="hero-buttons">
+          <a href="#entrenamientos-personales" class="btn btn-primary">Solicitar Entrenamiento</a>
+          <a href="https://wa.me/34600000000?text=Hola,%20me%20gustar%C3%ADa%20pedir%20informaci%C3%B3n%20sobre%20los%20servicios%20de%20GR%20SPORTS" target="_blank" class="btn btn-whatsapp">Contactar por WhatsApp</a>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="hero-visual-card">
+          <img src="assets/logo.jpg" alt="GR SPORTS Logo Oficial">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES STRIP -->
+  <div class="features-strip">
+    <div class="container features-grid">
+      <div class="feature-item">
+        <div class="feature-icon">⚡</div>
+        <div>
+          <h4>Clases de Alto Impacto</h4>
+          <p>BodyPump, ExtremFit y Pilates dirigidos con máxima energía.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🎯</div>
+        <div>
+          <h4>Entrenamientos 1 a 1 y Dúo</h4>
+          <p>Adaptados a tus objetivos en centros como InterClub.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">🛡️</div>
+        <div>
+          <h4>Sustituciones Profesionales</h4>
+          <p>Cobertura técnica inmediata para centros deportivos.</p>
+        </div>
+      </div>
+      <div class="feature-item">
+        <div class="feature-icon">☀️</div>
+        <div>
+          <h4>Campus & Actividades</h4>
+          <p>Jornadas diurnas, fútbol y eventos multideporte.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 1. BLOQUE: QUIÉNES SOMOS -->
+  <section id="quienes-somos">
+    <div class="container">
+      <div class="angular-badge">Identidad & Pasión</div>
+      <h2 class="section-title">¿QUIÉNES <span>SOMOS?</span></h2>
+      <p class="section-subtitle">Creemos firmemente en la pasión por el deporte y en que la actividad física es para todo el mundo, sin importar tu punto de partida.</p>
+
+      <div class="about-grid">
+        <div class="card-angular">
+          <h3 style="font-size: 2rem; margin-bottom: 15px; color: var(--accent-cyan);">NUESTRA FILOSOFÍA</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 15px;">
+            En <strong>GR SPORTS</strong> transformamos el entrenamiento en una experiencia motivadora, segura y accesible para todos. Trabajamos con particulares, centros deportivos y eventos para acercar el deporte a cada persona con rigor técnico y entusiasmo.
+          </p>
+          <p style="color: var(--text-secondary);">
+            Desde clases colectivas con máxima energía hasta preparaciones de pruebas físicas y oposiciones o procesos de recomposición corporal, nuestro compromiso es tu superación continua.
+          </p>
+        </div>
+
+        <!-- Tarjeta del Personal / Entrenador -->
+        <div class="card-angular">
+          <div class="team-card">
+            <div class="team-avatar">GR</div>
+            <div class="team-info">
+              <h3>Miguel</h3>
+              <div class="badge">Fundador & Head Coach</div>
+              <p style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 8px;">
+                <strong>Titulación:</strong> Graduado en Ciencias de la Actividad Física y del Deporte (CAFYD) / Especialista en Entrenamiento de Fuerza & Salud.
+              </p>
+              <p style="font-size: 0.9rem; color: var(--text-muted);">
+                Dedicado a ayudar a las personas a desbloquear su potencial físico con métodos contrastados y atención personalizada.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. BLOQUE: SERVICIOS PARA GIMNASIOS -->
+  <section id="servicios-gimnasios" style="background: rgba(18, 24, 36, 0.4);">
+    <div class="container">
+      <div class="angular-badge">Soluciones Profesionales</div>
+      <h2 class="section-title">SERVICIOS PARA <span>GIMNASIOS</span></h2>
+      <p class="section-subtitle">Aportamos dinamismo, profesionalidad y cobertura garantizada a gimnasios y centros deportivos colaboradores como <strong>InterClub</strong>.</p>
+
+      <div class="services-grid">
+        <!-- Servicio 1: Sustituciones -->
+        <div class="card-angular service-card">
+          <div class="angular-badge">Disponibilidad Rápida</div>
+          <h3>Sustituciones de Monitores</h3>
+          <p>Cubrimos bajas, vacaciones o imprevistos de monitores de sala y clases colectivas asegurando la máxima calidad para que tu centro nunca pare.</p>
+          <div class="service-tags">
+            <span class="service-tag">Puntualidad</span>
+            <span class="service-tag">Monitores Titulados</span>
+            <span class="service-tag">Gestión Inmediata</span>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <a href="https://wa.me/34600000000?text=Hola,%20necesito%20informaci%C3%B3n%20para%20sustituciones%20en%20mi%20gimnasio" target="_blank" class="btn btn-whatsapp" style="font-size: 1.1rem; padding: 8px 16px;">WhatsApp Directo</a>
+          </div>
+        </div>
+
+        <!-- Servicio 2: Clases Grupales -->
+        <div class="card-angular service-card">
+          <div class="angular-badge">Dirección de Clases</div>
+          <h3>Clases Colectivas y Dirigidas</h3>
+          <p>Programación e impartición de actividades dirigidas con alta demanda de fidelización y dinamismo que llenan salas.</p>
+          <div class="service-tags">
+            <span class="service-tag">Pilates & Movilidad</span>
+            <span class="service-tag">BodyPump</span>
+            <span class="service-tag">ExtremFit</span>
+            <span class="service-tag">HIIT</span>
+          </div>
+          <a href="https://wa.me/34600000000?text=Hola,%20quiero%20pedir%20presupuesto%20para%20clases%20grupales%20en%20nuestro%20centro" target="_blank" class="btn btn-outline" style="font-size: 1.1rem; padding: 8px 16px;">Pedir Presupuesto</a>
+        </div>
+
+        <!-- Servicio 3: Entrenamientos en Sala -->
+        <div class="card-angular service-card">
+          <div class="angular-badge">Personal Training en Centro</div>
+          <h3>Entrenamiento Personal en Gimnasio</h3>
+          <p>Atención directa a los socios del gimnasio para alcanzar sus objetivos de acondicionamiento, fuerza, pérdida de grasa o salud.</p>
+          <div class="service-tags">
+            <span class="service-tag">Socios InterClub</span>
+            <span class="service-tag">1 a 1</span>
+            <span class="service-tag">Dúo</span>
+          </div>
+          <a href="#entrenamientos-personales" class="btn btn-primary" style="font-size: 1.1rem; padding: 8px 16px;">Ver Modalidades</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. BLOQUE: ACTIVIDADES DE VERANO Y CAMPUS -->
+  <section id="actividades-verano">
+    <div class="container">
+      <div class="angular-badge">Campus & Eventos</div>
+      <h2 class="section-title">ACTIVIDADES DE <span>VERANO</span></h2>
+      <p class="section-subtitle">Jornadas deportivas dinámicas, campamentos diurnos y actividades al aire libre con fechas programadas o contratación a medida para grupos.</p>
+
+      <div class="summer-grid">
+        <div class="card-angular">
+          <div class="angular-badge">Campamentos Diurnos</div>
+          <h3 style="font-size: 1.8rem; margin-bottom: 10px;">Campamentos Multideporte</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 15px;">Campamentos diurnos de varios días (sin pernocta) orientados a niños y jóvenes: juegos cooperativos, preparación física lúdica y hábitos saludables.</p>
+          <ul style="color: var(--text-secondary); padding-left: 20px; margin-bottom: 20px; font-size: 0.95rem;">
+            <li>Grupos reducidos y grandes por edades</li>
+            <li>Monitores titulados y seguro de actividad</li>
+            <li>Fechas cerradas o contratación privada</li>
+          </ul>
+          <a href="https://wa.me/34600000000?text=Hola,%20me%20gustar%C3%ADa%20contratar%20o%20conocer%20fechas%20para%20un%20campamento%20de%20verano" target="_blank" class="btn btn-outline" style="font-size: 1rem; padding: 8px 16px;">Consultar / Contratar</a>
+        </div>
+
+        <div class="card-angular">
+          <div class="angular-badge">Jornadas Únicas</div>
+          <h3 style="font-size: 1.8rem; margin-bottom: 10px;">Actividades de Un Solo Día</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 15px;">Eventos deportivos concentrados: rutas al aire libre, tecnificación y entrenamientos específicos de fútbol, jornadas de acondicionamiento físico.</p>
+          <ul style="color: var(--text-secondary); padding-left: 20px; margin-bottom: 20px; font-size: 0.95rem;">
+            <li>Entrenamientos intensivos de fútbol</li>
+            <li>Rutas deportivas de senderismo y dinamización</li>
+            <li>Disponible para comuniones, bodas y eventos</li>
+          </ul>
+          <a href="https://wa.me/34600000000?text=Hola,%20quiero%20informaci%C3%B3n%20para%20una%20actividad%20deportiva%20de%20un%20d%C3%ADa%20(f%C3%BAtbol/rutas/evento)" target="_blank" class="btn btn-outline" style="font-size: 1rem; padding: 8px 16px;">Pedir Información</a>
+        </div>
+      </div>
+
+      <!-- Próximas actividades dinámicas creadas por el admin -->
+      <div style="margin-top: 50px;">
+        <h3 style="font-size: 2rem; margin-bottom: 20px; color: var(--accent-cyan);">CALENDARIO DE PRÓXIMAS ACTIVIDADES Y CLASES</h3>
+        <div id="dynamic-activities-list" class="services-grid">
+          <!-- Inyectado dinámicamente desde app.js -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. BLOQUE: ENTRENAMIENTOS PERSONALES -->
+  <section id="entrenamientos-personales" style="background: rgba(18, 24, 36, 0.4);">
+    <div class="container">
+      <div class="angular-badge">Atención Individualizada</div>
+      <h2 class="section-title">ENTRENAMIENTOS <span>PERSONALES</span></h2>
+      <p class="section-subtitle">Programas 100% personalizados según tus objetivos y condición física. Se imparten en gimnasios asociados (<strong>InterClub</strong>).</p>
+
+      <div class="pt-box">
+        <div class="pt-gym-notice">
+          ℹ️ <strong>Requisito de acceso:</strong> Los entrenamientos personales se realizan en los centros asociados con los que trabajamos (como <strong>InterClub</strong>). Las personas deben ser socias del centro colaborador o abonar el pase puntual de día en recepción.
+        </div>
+
+        <div class="pt-grid">
+          <div>
+            <h3 style="font-size: 2.2rem; margin-bottom: 15px; color: #fff;">¿CUÁL ES TU OBJETIVO?</h3>
+            <ul style="list-style: none; padding: 0; color: var(--text-secondary); line-height: 2;">
+              <li>✔️ <strong>Pérdida de grasa & Recomposición corporal</strong></li>
+              <li>✔️ <strong>Ganancia de masa muscular & Fuerza funcional</strong></li>
+              <li>✔️ <strong>Mantenimiento y Salud articular</strong></li>
+              <li>✔️ <strong>Preparación de pruebas físicas para oposiciones</strong></li>
+              <li>✔️ <strong>Modalidades: 1 persona (individual) o 2 personas (dúo)</strong></li>
+            </ul>
+            <p style="margin-top: 20px; font-size: 0.95rem; color: var(--text-muted);">
+              Al enviar tu solicitud, el entrenador la revisará directamente en el panel de control junto a tu ficha técnica (altura, peso, lesiones) para darte respuesta y coordinar el horario idóneo.
+            </p>
+          </div>
+
+          <!-- Formulario de Solicitud de Entrenamiento -->
+          <div>
+            <div style="background: #090d14; border: 1px solid var(--border-color); padding: 25px;">
+              <h4 style="font-size: 1.6rem; color: var(--accent-cyan); margin-bottom: 15px;">SOLICITAR ENTRENAMIENTO PERSONAL</h4>
+              <form id="form-pt-request">
+                <div class="form-group">
+                  <label>Tipo de Entrenamiento & Modalidad:</label>
+                  <select id="pt-type" class="form-control" required>
+                    <option value="Individual (1 persona) - Pérdida de grasa">Individual (1 persona) - Pérdida de grasa</option>
+                    <option value="Individual (1 persona) - Fuerza y Masa Muscular">Individual (1 persona) - Fuerza y Masa Muscular</option>
+                    <option value="Individual (1 persona) - Preparación Oposiciones">Individual (1 persona) - Preparación Oposiciones</option>
+                    <option value="Individual (1 persona) - Salud y Mantenimiento">Individual (1 persona) - Salud y Mantenimiento</option>
+                    <option value="Dúo (2 personas) - Entrenamiento Compartido">Dúo (2 personas) - Entrenamiento Compartido</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label>Horario o días que te vienen bien:</label>
+                  <input type="text" id="pt-schedule" class="form-control" placeholder="Ej: Tardes a partir de las 18:00h, lunes y miércoles" required>
+                </div>
+
+                <div class="form-group">
+                  <label>Detalles o metas específicas:</label>
+                  <textarea id="pt-comments" class="form-control" rows="3" placeholder="Explícanos tu objetivo específico o experiencia previa..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Enviar Solicitud al Entrenador</button>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container footer-grid">
+      <div>
+        <div class="brand-title" style="margin-bottom: 15px;">GR <span>SPORTS</span></div>
+        <p style="font-size: 0.95rem; max-width: 400px;">
+          Empresa líder en entrenamientos, preparación física y dinamización deportiva para gimnasios, particulares y eventos deportivos.
+        </p>
+      </div>
+      <div>
+        <h4 style="color:#fff; margin-bottom: 12px; font-size:1.3rem;">Enlaces Rápidos</h4>
+        <ul style="list-style:none; line-height:2; font-size:0.95rem;">
+          <li><a href="#quienes-somos" style="color:var(--text-secondary); text-decoration:none;">Quiénes Somos</a></li>
+          <li><a href="#servicios-gimnasios" style="color:var(--text-secondary); text-decoration:none;">Servicios para Gimnasios</a></li>
+          <li><a href="#actividades-verano" style="color:var(--text-secondary); text-decoration:none;">Actividades de Verano</a></li>
+          <li><a href="#entrenamientos-personales" style="color:var(--text-secondary); text-decoration:none;">Entrenamientos Personales</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 style="color:#fff; margin-bottom: 12px; font-size:1.3rem;">Contacto</h4>
+        <p style="font-size: 0.95rem; margin-bottom: 10px;">Gimnasio Colaborador: <strong>InterClub</strong></p>
+        <a href="https://wa.me/34600000000" target="_blank" class="btn btn-whatsapp" style="padding: 6px 14px; font-size: 1rem;">WhatsApp Oficial</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2026 GR SPORTS. Todos los derechos reservados.
+    </div>
+  </footer>
+
+  <!-- MODAL: LOGIN & REGISTRO CON FICHA TÉCNICA -->
+  <div id="modal-auth" class="modal-overlay">
+    <div class="modal-window">
+      <button class="modal-close" onclick="closeModal('modal-auth')">&times;</button>
+      
+      <div class="auth-tabs">
+        <button class="auth-tab-btn active" data-tab="login">Iniciar Sesión</button>
+        <button class="auth-tab-btn" data-tab="register">Crear Cuenta (Ficha Técnica)</button>
+      </div>
+
+      <!-- PESTAÑA LOGIN -->
+      <div id="tab-login">
+        <form id="form-login">
+          <div class="form-group">
+            <label>Correo Electrónico:</label>
+            <input type="email" id="login-email" class="form-control" placeholder="tu@email.com" required>
+          </div>
+          <div class="form-group">
+            <label>Contraseña:</label>
+            <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;">Entrar a mi Cuenta</button>
+        </form>
+        <div style="margin-top: 15px; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
+          (Acceso administrador predeterminado: <code>admin@grsports.com</code> / Contraseña: <code>admin</code>)
+        </div>
+      </div>
+
+      <!-- PESTAÑA REGISTRO CON FICHA TÉCNICA COMPLETA -->
+      <div id="tab-register" style="display:none;">
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 15px;">
+          Completa tu ficha técnica. Esta información la usará tu entrenador para diseñar tus entrenamientos de forma segura.
+        </p>
+        <form id="form-register">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre y Apellidos:</label>
+              <input type="text" id="reg-name" class="form-control" required placeholder="Ej: Javier García">
+            </div>
+            <div class="form-group">
+              <label>Edad:</label>
+              <input type="number" id="reg-age" class="form-control" min="12" max="100" required placeholder="Ej: 26">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Correo Electrónico:</label>
+              <input type="email" id="reg-email" class="form-control" required placeholder="tu@email.com">
+            </div>
+            <div class="form-group">
+              <label>Teléfono de Contacto:</label>
+              <input type="tel" id="reg-phone" class="form-control" required placeholder="+34 600 000 000">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Contraseña:</label>
+            <input type="password" id="reg-password" class="form-control" minlength="3" required placeholder="Crea una contraseña">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Altura (cm):</label>
+              <input type="number" id="reg-height" class="form-control" min="100" max="230" required placeholder="Ej: 178">
+            </div>
+            <div class="form-group">
+              <label>Peso Actual (kg):</label>
+              <input type="number" id="reg-weight" step="0.1" class="form-control" min="30" max="200" required placeholder="Ej: 75.5">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>¿Perteneces a algún gimnasio colaborador?</label>
+            <select id="reg-gym" class="form-control" required>
+              <option value="InterClub">InterClub</option>
+              <option value="Particular / Sin gimnasio">Particular / Sin gimnasio</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Historial médico / Lesiones / Observaciones físicas:</label>
+            <textarea id="reg-notes" class="form-control" rows="2" placeholder="¿Tienes alguna lesión, dolor de espalda o rodilla, limitación o dolencia física?"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%; margin-top: 10px;">Crear Mi Ficha y Cuenta</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: PERFIL DE USUARIO Y FICHA TÉCNICA -->
+  <div id="modal-profile" class="modal-overlay">
+    <div class="modal-window">
+      <button class="modal-close" onclick="closeModal('modal-profile')">&times;</button>
+      <div class="angular-badge">Mi Cuenta</div>
+      <h2 style="font-size: 2.2rem; margin-bottom: 20px;">MI FICHA <span>TÉCNICA</span></h2>
+      <div id="profile-content"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: PANEL DE ADMINISTRADOR -->
+  <div id="modal-admin" class="modal-overlay">
+    <div class="modal-window admin-modal">
+      <button class="modal-close" onclick="closeModal('modal-admin')">&times;</button>
+      <div class="angular-badge" style="border-left-color: #f59e0b; color: #f59e0b;">Panel de Control</div>
+      <h2 style="font-size: 2.4rem; margin-bottom: 15px;">ADMINISTRACIÓN <span>GR SPORTS</span></h2>
+
+      <div class="admin-nav">
+        <button class="admin-tab-btn active" data-tab="requests">Bandeja de Solicitudes</button>
+        <button class="admin-tab-btn" data-tab="users">Fichas de Clientes</button>
+        <button class="admin-tab-btn" data-tab="activities">Añadir Nueva Actividad</button>
+      </div>
+
+      <!-- SECCIÓN 1: SOLICITUDES DE PT -->
+      <div id="admin-sec-requests">
+        <h3 style="font-size: 1.5rem; margin-bottom: 12px; color: var(--accent-cyan);">Solicitudes de Entrenamiento Personal</h3>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Cliente / Gym</th>
+                <th>Tipo & Horario</th>
+                <th>Detalles</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody id="admin-requests-list"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 2: CLIENTES REGISTRADOS -->
+      <div id="admin-sec-users" style="display:none;">
+        <h3 style="font-size: 1.5rem; margin-bottom: 12px; color: var(--accent-cyan);">Listado de Clientes y Fichas Físicas</h3>
+        <div class="table-responsive">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Contacto</th>
+                <th>Gimnasio</th>
+                <th>Medidas</th>
+                <th>Lesiones / Historial Médico</th>
+                <th>Rol</th>
+              </tr>
+            </thead>
+            <tbody id="admin-users-list"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- SECCIÓN 3: AÑADIR ACTIVIDADES -->
+      <div id="admin-sec-activities" style="display:none;">
+        <h3 style="font-size: 1.5rem; margin-bottom: 12px; color: var(--accent-cyan);">Publicar Nueva Actividad o Clase</h3>
+        <form id="form-add-activity" style="margin-top: 15px;">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Título de la Actividad:</label>
+              <input type="text" id="act-title" class="form-control" placeholder="Ej: Taller Intensivo de Fuerza" required>
+            </div>
+            <div class="form-group">
+              <label>Categoría:</label>
+              <select id="act-category" class="form-control" required>
+                <option value="gimnasios">Servicios Gimnasio</option>
+                <option value="verano">Actividades Verano / Campus</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Ubicación / Gimnasio:</label>
+              <input type="text" id="act-location" class="form-control" placeholder="Ej: InterClub - Sala 1" required>
+            </div>
+            <div class="form-group">
+              <label>Fecha:</label>
+              <input type="date" id="act-date" class="form-control" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Horario:</label>
+              <input type="text" id="act-time" class="form-control" placeholder="Ej: 18:30 - 20:00" required>
+            </div>
+            <div class="form-group">
+              <label>Plazas Máximas:</label>
+              <input type="number" id="act-spots" class="form-control" placeholder="Ej: 20" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary" style="margin-top: 10px;">Publicar Actividad en la Web</button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
