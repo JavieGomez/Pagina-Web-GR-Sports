@@ -90,7 +90,15 @@ function formatDate(value, options = { dateStyle: 'medium', timeStyle: 'short' }
 
 function friendlyError(error) {
   const text = error?.message || 'No se pudo completar la operación.';
+  const normalized = text.toLowerCase();
   if (text.includes('Failed to fetch')) return 'No se pudo conectar con Supabase. Comprueba la conexión y la configuración del proyecto.';
+  if (normalized.includes('invalid login credentials')) return 'El correo o la contraseña no son correctos.';
+  if (normalized.includes('email not confirmed')) return 'Confirma tu correo desde el enlace que te enviamos antes de iniciar sesión.';
+  if (normalized.includes('user already registered')) return 'Ya existe una cuenta con ese correo. Inicia sesión o usa otro correo.';
+  if (normalized.includes('redirect') && (normalized.includes('allow') || normalized.includes('not permitted'))) return 'Supabase no permite la URL de confirmación. Añade la dirección de esta web en Authentication → URL Configuration → Redirect URLs.';
+  if (['PGRST205', '42P01'].includes(error?.code) || normalized.includes('could not find the table') || normalized.includes('relation') && normalized.includes('does not exist')) {
+    return 'La cuenta puede guardarse, pero falta instalar las tablas de GR Sports. Ejecuta supabase/setup.sql una vez en el SQL Editor de Supabase.';
+  }
   return text;
 }
 
@@ -189,28 +197,57 @@ async function initAuth(user) {
 
   $('#login-form')?.addEventListener('submit', async event => {
     event.preventDefault();
-    if (!supabase) return;
-    const button = event.submitter;
+    const button = event.submitter || $('#login-form button[type="submit"]');
+    if (!supabase) return setMessage('auth-message', 'Supabase aún no está configurado. Comprueba config.js.', true);
+    const originalText = button.textContent;
     button.disabled = true;
-    const { error } = await supabase.auth.signInWithPassword({ email: $('#login-email').value.trim(), password: $('#login-password').value });
-    button.disabled = false;
-    if (error) setMessage('auth-message', friendlyError(error), true);
-    else location.href = safeNext('cuenta.html');
+    button.textContent = 'Iniciando sesión…';
+    setMessage('auth-message', '');
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email: $('#login-email').value.trim(), password: $('#login-password').value });
+      if (error) throw error;
+      location.replace(safeNext('cuenta.html'));
+    } catch (error) {
+      setMessage('auth-message', friendlyError(error), true);
+    } finally {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
   });
 
   $('#register-form')?.addEventListener('submit', async event => {
     event.preventDefault();
-    if (!supabase) return;
+    const button = event.submitter || $('#register-form button[type="submit"]');
+    if (!supabase) return setMessage('auth-message', 'Supabase aún no está configurado. Comprueba config.js.', true);
     const fullName = $('#register-name').value.trim();
     const phone = $('#register-phone').value.trim();
-    const { data, error } = await supabase.auth.signUp({
-      email: $('#register-email').value.trim(),
-      password: $('#register-password').value,
-      options: { data: { full_name: fullName, phone }, emailRedirectTo: new URL('.', location.href).href }
-    });
-    if (error) setMessage('auth-message', friendlyError(error), true);
-    else if (data.session) location.href = safeNext('cuenta.html');
-    else setMessage('auth-message', 'Cuenta creada. Revisa tu correo para verificarla y después vuelve a iniciar sesión.');
+    const email = $('#register-email').value.trim();
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Creando cuenta…';
+    setMessage('auth-message', '');
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: $('#register-password').value,
+        options: {
+          data: { full_name: fullName, phone },
+          emailRedirectTo: new URL('.', location.href).href
+        }
+      });
+      if (error) throw error;
+      if (!data.user) throw new Error('Supabase no devolvió el usuario creado. Inténtalo de nuevo.');
+      if (data.session) {
+        location.replace(safeNext('cuenta.html'));
+        return;
+      }
+      setMessage('auth-message', `Cuenta guardada. Confirma tu correo desde el enlace que enviamos a ${email}; después podrás iniciar sesión. Revisa también la carpeta de spam.`);
+    } catch (error) {
+      setMessage('auth-message', friendlyError(error), true);
+    } finally {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
   });
 }
 
