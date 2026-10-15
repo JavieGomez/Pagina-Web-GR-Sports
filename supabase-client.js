@@ -13,7 +13,9 @@ if (isSupabaseConfigured) {
 export async function currentUser() {
   if (!supabase) return null;
   const { data: { user }, error } = await supabase.auth.getUser();
-  if (error) throw error;
+  // No session is the normal state on the login and signup pages. Supabase
+  // reports it as an error, but the app must still initialize those forms.
+  if (error && error.name !== 'AuthSessionMissingError' && error.message !== 'Auth session missing!') throw error;
   return user;
 }
 
