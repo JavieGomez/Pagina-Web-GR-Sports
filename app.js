@@ -95,7 +95,7 @@ function friendlyError(error) {
   if (normalized.includes('invalid login credentials')) return 'El correo o la contraseña no son correctos.';
   if (normalized.includes('email not confirmed')) return 'Confirma tu correo desde el enlace que te enviamos antes de iniciar sesión.';
   if (normalized.includes('user already registered')) return 'Ya existe una cuenta con ese correo. Inicia sesión o usa otro correo.';
-  if (normalized.includes('redirect') && (normalized.includes('allow') || normalized.includes('not permitted'))) return 'Supabase no permite la URL de confirmación. Añade la dirección de esta web en Authentication → URL Configuration → Redirect URLs.';
+  if (normalized.includes('redirect') && (normalized.includes('allow') || normalized.includes('not permitted'))) return 'Supabase no permite la URL de retorno. Añade la dirección de esta web en Authentication → URL Configuration → Redirect URLs.';
   if (['PGRST205', '42P01'].includes(error?.code) || normalized.includes('could not find the table') || normalized.includes('relation') && normalized.includes('does not exist')) {
     return 'La cuenta puede guardarse, pero falta instalar las tablas de GR Sports. Ejecuta supabase/setup.sql una vez en el SQL Editor de Supabase.';
   }
@@ -183,7 +183,14 @@ function openAuthForRequest(key, data) {
 }
 
 async function initAuth(user) {
-  if (user) {
+  const isPasswordReset = new URLSearchParams(location.search).get('reset') === '1';
+  const showPanel = name => {
+    $('#auth-tabs')?.classList.toggle('hidden', name === 'reset');
+    $$('[data-auth-panel]').forEach(panel => panel.classList.toggle('hidden', panel.dataset.authPanel !== name));
+    $$('.auth-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.authTab === name));
+  };
+
+  if (user && !isPasswordReset) {
     const next = safeNext('cuenta.html');
     location.replace(next);
     return;
@@ -191,9 +198,67 @@ async function initAuth(user) {
 
   $$('.auth-tab').forEach(button => button.addEventListener('click', () => {
     const selected = button.dataset.authTab;
-    $$('.auth-tab').forEach(tab => tab.classList.toggle('active', tab === button));
-    $$('[data-auth-panel]').forEach(panel => panel.classList.toggle('hidden', panel.dataset.authPanel !== selected));
+    showPanel(selected);
   }));
+
+  $('#forgot-password')?.addEventListener('click', async () => {
+    const emailInput = $('#login-email');
+    if (!emailInput.reportValidity()) return;
+    if (!supabase) return setMessage('auth-message', 'Supabase aún no está configurado. Comprueba config.js.', true);
+    const button = $('#forgot-password');
+    button.disabled = true;
+    setMessage('auth-message', 'Enviando el enlace de recuperación…');
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(emailInput.value.trim(), {
+        redirectTo: new URL('acceso.html?reset=1', location.href).href
+      });
+      if (error) throw error;
+      setMessage('auth-message', 'Si existe una cuenta con ese correo, recibirás un enlace para crear una nueva contraseña. Revisa también la carpeta de spam.');
+    } catch (error) {
+      setMessage('auth-message', friendlyError(error), true);
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  $('#reset-back')?.addEventListener('click', () => {
+    history.replaceState(null, '', location.pathname);
+    showPanel('login');
+    setMessage('auth-message', '');
+  });
+
+  if (isPasswordReset) {
+    if (user) {
+      $('#login-email').value = user.email || '';
+      showPanel('reset');
+    } else {
+      showPanel('login');
+      setMessage('auth-message', 'El enlace de recuperación no es válido o ha caducado. Solicita uno nuevo e inténtalo otra vez.', true);
+    }
+  }
+
+  $('#password-reset-form')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!form.reportValidity()) return;
+    if (!supabase || !user) return setMessage('auth-message', 'El enlace de recuperación no es válido o ha caducado. Solicita uno nuevo e inténtalo otra vez.', true);
+    if ($('#new-password').value !== $('#confirm-password').value) return setMessage('auth-message', 'Las contraseñas no coinciden.', true);
+    const button = event.submitter || $('#password-reset-form button[type="submit"]');
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Guardando…';
+    setMessage('auth-message', '');
+    try {
+      const { error } = await supabase.auth.updateUser({ password: $('#new-password').value });
+      if (error) throw error;
+      location.replace(isAdmin(user) ? 'administracion.html' : 'cuenta.html');
+    } catch (error) {
+      setMessage('auth-message', friendlyError(error), true);
+    } finally {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  });
 
   $('#login-form')?.addEventListener('submit', async event => {
     event.preventDefault();
