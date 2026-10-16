@@ -126,6 +126,31 @@ function showSetupMessage() {
   if (!isSupabaseConfigured && id) setMessage(id, 'Supabase aún no está configurado. Añade el Project URL y la clave publishable en config.js, y ejecuta supabase/setup.sql en el SQL Editor.', true);
 }
 
+function setupBackNavigation() {
+  const page = document.body.dataset.page;
+  if (!page || page === 'home') return;
+
+  const destinations = {
+    auth: 'index.html',
+    admin: 'cuenta.html',
+    account: 'index.html',
+    team: 'index.html#quienes-somos',
+    'password-recovery': 'acceso.html',
+    session: 'cuenta.html',
+    request: 'index.html#servicios'
+  };
+  const nav = $('.site-nav .site-links');
+  if (!nav) return;
+
+  const item = document.createElement('li');
+  const link = document.createElement('a');
+  link.className = 'site-back-link';
+  link.href = destinations[page] || 'index.html';
+  link.textContent = '← Volver';
+  item.append(link);
+  nav.prepend(item);
+}
+
 function inputMarkup(field) {
   const id = `field-${field.name}`;
   if (field.type === 'select') {
@@ -600,12 +625,38 @@ async function sendChatMessage(event) {
 
 async function loadNews() {
   if (!supabase) return;
-  const { data, error } = await supabase.from('news_posts').select('title,summary,published_at').eq('is_published', true).order('published_at', { ascending: false }).limit(6);
+  const { data, error } = await supabase.from('news_posts').select('title,summary,body,published_at').eq('is_published', true).order('published_at', { ascending: false }).limit(6);
   if (error || !data?.length) return;
-  $('#news-list').innerHTML = data.map(post => `<article class="card-angular"><h3>${escapeHtml(post.title)}</h3><p>${escapeHtml(post.summary)}</p><small class="muted">${post.published_at ? formatDate(post.published_at, { dateStyle: 'medium' }) : ''}</small></article>`).join('');
+  const renderParagraph = paragraph => {
+    const parts = [];
+    const urls = String(paragraph).split(/(https:\/\/[^\s]+)/g);
+    for (const part of urls) {
+      if (!part.startsWith('https://')) {
+        parts.push(escapeHtml(part));
+        continue;
+      }
+      const trimmed = part.replace(/[),.;]+$/, '');
+      const suffix = part.slice(trimmed.length);
+      try {
+        const url = new URL(trimmed);
+        if (url.protocol !== 'https:') throw new Error('Unsupported URL protocol');
+        const label = url.hostname === 'www.sciencedaily.com' ? 'ScienceDaily' : url.hostname;
+        parts.push(`<a href="${escapeHtml(url.href)}" target="_blank" rel="noopener noreferrer">${escapeHtml(label)}</a>${escapeHtml(suffix)}`);
+      } catch {
+        parts.push(escapeHtml(part));
+      }
+    }
+    return `<p>${parts.join('')}</p>`;
+  };
+  $('#news-list').innerHTML = data.map(post => {
+    const body = String(post.body || '').split(/\n\s*\n/).filter(Boolean).map(renderParagraph).join('');
+    const summary = post.summary ? renderParagraph(post.summary) : '';
+    return `<article class="card-angular"><h3>${escapeHtml(post.title)}</h3>${summary}${body}<small class="muted">${post.published_at ? formatDate(post.published_at, { dateStyle: 'medium' }) : ''}</small></article>`;
+  }).join('');
 }
 
 async function boot() {
+  setupBackNavigation();
   showSetupMessage();
   if (!isSupabaseConfigured || !supabase) {
     if (document.body.dataset.page === 'home') $('#news-list')?.insertAdjacentHTML('beforeend', '<article class="card-angular"><p class="muted">Las noticias aparecerán aquí cuando se conecte la base de datos.</p></article>');
