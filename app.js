@@ -122,7 +122,7 @@ async function renderNavigation(user) {
 
 function showSetupMessage() {
   const page = document.body.dataset.page;
-  const id = { auth: 'auth-message', request: 'request-message', account: 'account-message', admin: 'admin-message', session: 'session-message' }[page];
+  const id = { auth: 'auth-message', 'password-recovery': 'auth-message', request: 'request-message', account: 'account-message', admin: 'admin-message', session: 'session-message' }[page];
   if (!isSupabaseConfigured && id) setMessage(id, 'Supabase aún no está configurado. Añade el Project URL y la clave publishable en config.js, y ejecuta supabase/setup.sql en el SQL Editor.', true);
 }
 
@@ -183,14 +183,7 @@ function openAuthForRequest(key, data) {
 }
 
 async function initAuth(user) {
-  const isPasswordReset = new URLSearchParams(location.search).get('reset') === '1';
-  const showPanel = name => {
-    $('#auth-tabs')?.classList.toggle('hidden', name === 'reset');
-    $$('[data-auth-panel]').forEach(panel => panel.classList.toggle('hidden', panel.dataset.authPanel !== name));
-    $$('.auth-tab').forEach(tab => tab.classList.toggle('active', tab.dataset.authTab === name));
-  };
-
-  if (user && !isPasswordReset) {
+  if (user) {
     const next = safeNext('cuenta.html');
     location.replace(next);
     return;
@@ -198,77 +191,19 @@ async function initAuth(user) {
 
   $$('.auth-tab').forEach(button => button.addEventListener('click', () => {
     const selected = button.dataset.authTab;
-    showPanel(selected);
+    $$('.auth-tab').forEach(tab => tab.classList.toggle('active', tab === button));
+    $$('[data-auth-panel]').forEach(panel => panel.classList.toggle('hidden', panel.dataset.authPanel !== selected));
   }));
-
-  $('#forgot-password')?.addEventListener('click', async () => {
-    const emailInput = $('#login-email');
-    if (!emailInput.reportValidity()) return;
-    if (!supabase) return setMessage('auth-message', 'Supabase aún no está configurado. Comprueba config.js.', true);
-    const button = $('#forgot-password');
-    button.disabled = true;
-    setMessage('auth-message', 'Enviando el enlace de recuperación…');
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(emailInput.value.trim(), {
-        redirectTo: new URL('acceso.html?reset=1', location.href).href
-      });
-      if (error) throw error;
-      setMessage('auth-message', 'Si existe una cuenta con ese correo, recibirás un enlace para crear una nueva contraseña. Revisa también la carpeta de spam.');
-    } catch (error) {
-      setMessage('auth-message', friendlyError(error), true);
-    } finally {
-      button.disabled = false;
-    }
-  });
-
-  $('#reset-back')?.addEventListener('click', () => {
-    history.replaceState(null, '', location.pathname);
-    showPanel('login');
-    setMessage('auth-message', '');
-  });
-
-  if (isPasswordReset) {
-    if (user) {
-      $('#login-email').value = user.email || '';
-      showPanel('reset');
-    } else {
-      showPanel('login');
-      setMessage('auth-message', 'El enlace de recuperación no es válido o ha caducado. Solicita uno nuevo e inténtalo otra vez.', true);
-    }
-  }
-
-  $('#password-reset-form')?.addEventListener('submit', async event => {
-    event.preventDefault();
-    const form = event.currentTarget;
-    if (!form.reportValidity()) return;
-    if (!supabase || !user) return setMessage('auth-message', 'El enlace de recuperación no es válido o ha caducado. Solicita uno nuevo e inténtalo otra vez.', true);
-    if ($('#new-password').value !== $('#confirm-password').value) return setMessage('auth-message', 'Las contraseñas no coinciden.', true);
-    const button = event.submitter || $('#password-reset-form button[type="submit"]');
-    const originalText = button.textContent;
-    button.disabled = true;
-    button.textContent = 'Guardando…';
-    setMessage('auth-message', '');
-    try {
-      const { error } = await supabase.auth.updateUser({ password: $('#new-password').value });
-      if (error) throw error;
-      location.replace(isAdmin(user) ? 'administracion.html' : 'cuenta.html');
-    } catch (error) {
-      setMessage('auth-message', friendlyError(error), true);
-    } finally {
-      button.disabled = false;
-      button.textContent = originalText;
-    }
-  });
 
   $('#login-form')?.addEventListener('submit', async event => {
     event.preventDefault();
     const button = event.submitter || $('#login-form button[type="submit"]');
-    if (!supabase) return setMessage('auth-message', 'Supabase aún no está configurado. Comprueba config.js.', true);
     const originalText = button.textContent;
     button.disabled = true;
     button.textContent = 'Iniciando sesión…';
     setMessage('auth-message', '');
     try {
+      if (!supabase) throw new Error('Supabase aún no está configurado. Comprueba config.js.');
       const { error } = await supabase.auth.signInWithPassword({ email: $('#login-email').value.trim(), password: $('#login-password').value });
       if (error) throw error;
       location.replace(safeNext('cuenta.html'));
@@ -307,6 +242,72 @@ async function initAuth(user) {
         return;
       }
       setMessage('auth-message', `Cuenta guardada. Confirma tu correo desde el enlace que enviamos a ${email}; después podrás iniciar sesión. Revisa también la carpeta de spam.`);
+    } catch (error) {
+      setMessage('auth-message', friendlyError(error), true);
+    } finally {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  });
+}
+
+async function initPasswordRecovery(user) {
+  const isRecoveryCallback = new URLSearchParams(location.search).get('recovery') === '1';
+  const requestForm = $('#recovery-request-form');
+  const resetForm = $('#password-reset-form');
+
+  if (!supabase) return setMessage('auth-message', 'Supabase aún no está configurado. Comprueba config.js.', true);
+
+  requestForm?.classList.toggle('hidden', isRecoveryCallback);
+  resetForm?.classList.toggle('hidden', !isRecoveryCallback || !user);
+
+  if (isRecoveryCallback && user) {
+    $('#reset-email').value = user.email || '';
+  } else if (isRecoveryCallback) {
+    setMessage('auth-message', 'El enlace de recuperación no es válido o ha caducado. Solicita uno nuevo e inténtalo otra vez.', true);
+  }
+
+  requestForm?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!form.reportValidity()) return;
+    const button = event.submitter || requestForm.querySelector('button[type="submit"]');
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Enviando…';
+    setMessage('auth-message', '');
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail($('#recovery-email').value.trim(), {
+        redirectTo: new URL('restablecer.html?recovery=1', location.href).href
+      });
+      if (error) throw error;
+      setMessage('auth-message', 'Si existe una cuenta con ese correo, recibirás un enlace para verificarla y crear una nueva contraseña. Revisa también la carpeta de spam.');
+    } catch (error) {
+      setMessage('auth-message', friendlyError(error), true);
+    } finally {
+      button.disabled = false;
+      button.textContent = originalText;
+    }
+  });
+
+  resetForm?.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!event.currentTarget.reportValidity()) return;
+    if (!user || !isRecoveryCallback) return setMessage('auth-message', 'El enlace de recuperación no es válido o ha caducado. Solicita uno nuevo e inténtalo otra vez.', true);
+    const email = $('#reset-email').value.trim().toLowerCase();
+    if (email !== String(user.email || '').trim().toLowerCase()) return setMessage('auth-message', 'El correo no coincide con la cuenta verificada por el enlace.', true);
+    if ($('#new-password').value !== $('#confirm-password').value) return setMessage('auth-message', 'Las contraseñas no coinciden.', true);
+
+    const button = event.submitter || resetForm.querySelector('button[type="submit"]');
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Guardando…';
+    setMessage('auth-message', '');
+    try {
+      const { error } = await supabase.auth.updateUser({ password: $('#new-password').value });
+      if (error) throw error;
+      setMessage('auth-message', 'Contraseña actualizada. Ya puedes iniciar sesión.');
+      location.replace(isAdmin(user) ? 'administracion.html' : 'cuenta.html');
     } catch (error) {
       setMessage('auth-message', friendlyError(error), true);
     } finally {
@@ -615,6 +616,7 @@ async function boot() {
     await renderNavigation(user);
     const page = document.body.dataset.page;
     if (page === 'auth') await initAuth(user);
+    if (page === 'password-recovery') await initPasswordRecovery(user);
     if (page === 'request') await initRequest(user);
     if (page === 'account') await initAccount(user);
     if (page === 'admin') await initAdmin(user);
@@ -622,7 +624,7 @@ async function boot() {
     if (page === 'home') await loadNews();
   } catch (error) {
     const page = document.body.dataset.page;
-    const id = { auth: 'auth-message', request: 'request-message', account: 'account-message', admin: 'admin-message', session: 'session-message' }[page];
+    const id = { auth: 'auth-message', 'password-recovery': 'auth-message', request: 'request-message', account: 'account-message', admin: 'admin-message', session: 'session-message' }[page];
     if (id) setMessage(id, friendlyError(error), true);
   }
 }
