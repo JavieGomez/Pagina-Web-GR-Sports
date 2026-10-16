@@ -65,7 +65,7 @@ const SERVICE_TYPES = {
   }
 };
 
-const STATUS_LABELS = { pending: 'En espera', approved: 'Aprobada', rejected: 'No aprobada' };
+const STATUS_LABELS = { pending: 'En espera', change_pending: 'Cambio de horario pendiente de aceptar', approved: 'Confirmada', rejected: 'Rechazada' };
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
@@ -450,15 +450,32 @@ async function initAccount(user) {
   const requests = requestResult.data || [];
   const sessions = (participantResult.data || []).map(row => row.sessions).filter(Boolean).sort((a, b) => new Date(b.starts_at) - new Date(a.starts_at));
   $('#request-list').innerHTML = requests.length ? requests.map(request => `
-    <article class="list-card"><div class="toolbar"><h3>${escapeHtml(request.service_title)}</h3><span class="status-pill ${escapeHtml(request.status)}">${STATUS_LABELS[request.status] || 'En espera'}</span></div>
+    <article class="list-card"><div class="toolbar"><h3>${escapeHtml(request.service_title)}</h3><span class="status-pill ${escapeHtml(request.status === 'change_pending' ? 'pending' : request.status)}">${STATUS_LABELS[request.status] || 'En espera'}</span></div>
       <p>Solicitud del ${formatDate(request.created_at, { dateStyle: 'medium' })} · Estimación: ${formatMoney(request.estimate_eur)}</p>
       <p>Opción: ${request.quote_choice === 'whatsapp' ? 'Presupuesto final por WhatsApp' : 'Confirmar estimación'}</p>
-      ${request.admin_response ? `<p><strong>Respuesta del equipo:</strong> ${escapeHtml(request.admin_response)}</p>` : ''}</article>`).join('') : '<div class="list-card"><p>Todavía no has enviado ninguna solicitud.</p><a class="card-link" href="index.html#servicios">Ver servicios →</a></div>';
+      ${request.admin_proposed_start_at ? `<p><strong>Horario alternativo propuesto:</strong> ${formatDate(request.admin_proposed_start_at)} – ${formatDate(request.admin_proposed_end_at, { hour: '2-digit', minute: '2-digit' })}</p>` : ''}
+      ${request.admin_response ? `<p><strong>Respuesta del equipo:</strong> ${escapeHtml(request.admin_response)}</p>` : ''}
+      ${request.status === 'change_pending' ? `<div class="toolbar"><button type="button" class="btn btn-primary" data-schedule-response="accept" data-request-id="${request.id}">Aceptar cambio</button><button type="button" class="btn btn-outline" data-schedule-response="decline" data-request-id="${request.id}">Rechazar cambio</button></div>` : ''}</article>`).join('') : '<div class="list-card"><p>Todavía no has enviado ninguna solicitud.</p><a class="card-link" href="index.html#servicios">Ver servicios →</a></div>';
+  $('#request-list').querySelectorAll('[data-schedule-response]').forEach(button => button.addEventListener('click', async () => {
+    button.disabled = true;
+    const { error } = await supabase.rpc('respond_to_schedule_change', { p_request_id: button.dataset.requestId, p_accept: button.dataset.scheduleResponse === 'accept' });
+    if (error) {
+      setMessage('account-message', friendlyError(error), true);
+      button.disabled = false;
+    } else {
+      setMessage('account-message', button.dataset.scheduleResponse === 'accept' ? 'Horario aceptado. La clase ya está programada.' : 'Cambio rechazado. El equipo podrá proponerte otro horario.');
+      await initAccount(user);
+    }
+  }));
   $('#session-list').innerHTML = sessions.length ? sessions.map(session => `
     <article class="list-card"><div class="toolbar"><h3>${escapeHtml(session.title)}</h3><span class="status-pill">${new Date(session.starts_at) < new Date() ? 'Realizada' : 'Próxima'}</span></div>
       <p>${formatDate(session.starts_at)} · ${escapeHtml(session.location)}</p><p>${escapeHtml(session.notes || 'El entrenador todavía no ha añadido indicaciones.')}</p>
       <a class="card-link" href="sesion.html?id=${encodeURIComponent(session.id)}">Abrir chat de la sesión →</a></article>`).join('') : '<div class="list-card"><p>Cuando el equipo te asigne una clase o entrenamiento, aparecerá aquí.</p></div>';
-  supabase.channel(`account-${user.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'service_requests', filter: `user_id=eq.${user.id}` }, () => initAccount(user)).subscribe();
+  if (!accountRealtimeChannel) {
+    accountRealtimeChannel = supabase.channel(`account-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'service_requests', filter: `user_id=eq.${user.id}` }, () => initAccount(user))
+      .subscribe();
+  }
 }
 
 let calendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
@@ -503,23 +520,36 @@ async function loadAdminData() {
 
 function renderAdminRequests() {
   const pending = adminRequests.filter(request => request.status === 'pending');
+  const pendingHeading = $('#admin-pending-count');
+  if (pendingHeading) pendingHeading.textContent = `pendientes · ${pending.length}`;
   $('#admin-request-list').innerHTML = pending.length ? pending.map(request => {
     const details = Object.entries(request.details || {}).map(([key, value]) => `<li><strong>${escapeHtml(key)}:</strong> ${escapeHtml(value)}</li>`).join('');
     return `<article class="list-card"><div class="toolbar"><h3>${escapeHtml(request.service_title)}</h3><span class="status-pill pending">En espera</span></div>
       <p><strong>${escapeHtml(request.profile?.full_name || 'Usuario')}</strong>${request.profile?.email ? ` · ${escapeHtml(request.profile.email)}` : ''}${request.profile?.phone ? ` · ${escapeHtml(request.profile.phone)}` : ''}</p>
       <p>Recibida el ${formatDate(request.created_at)} · Estimación ${formatMoney(request.estimate_eur)} · ${request.quote_choice === 'whatsapp' ? 'Pidió presupuesto final por WhatsApp' : 'Aceptó estimación orientativa'}</p><ul>${details}</ul>
-      <div class="form-group"><label for="response-${request.id}">Respuesta para la persona</label><input id="response-${request.id}" placeholder="Mensaje opcional"></div>
-      <div class="toolbar"><button type="button" class="btn btn-primary" data-request-action="approved" data-request-id="${request.id}">Aceptar</button><button type="button" class="btn btn-outline" data-request-action="rejected" data-request-id="${request.id}">Rechazar</button></div></article>`;
+      <div class="form-row"><div class="form-group"><label for="start-${request.id}">Inicio confirmado o propuesto</label><input id="start-${request.id}" type="datetime-local"></div><div class="form-group"><label for="end-${request.id}">Fin</label><input id="end-${request.id}" type="datetime-local"></div></div>
+      <div class="form-group"><label for="response-${request.id}">Mensaje para la persona</label><input id="response-${request.id}" placeholder="Mensaje o motivo del rechazo"></div>
+      <div class="toolbar"><button type="button" class="btn btn-primary" data-request-action="approved" data-request-id="${request.id}">Confirmar horario</button><button type="button" class="btn btn-outline" data-request-action="change_pending" data-request-id="${request.id}">Proponer cambio</button><button type="button" class="btn btn-outline" data-request-action="rejected" data-request-id="${request.id}">Rechazar</button></div></article>`;
   }).join('') : '<div class="list-card"><p>No hay solicitudes pendientes.</p></div>';
   $$('[data-request-action]').forEach(button => button.addEventListener('click', () => updateRequest(button.dataset.requestId, button.dataset.requestAction)));
 }
 
-async function updateRequest(id, status) {
+async function updateRequest(id, action) {
   const response = $(`#response-${CSS.escape(id)}`)?.value.trim() || '';
-  const { error } = await supabase.from('service_requests').update({ status, admin_response: response }).eq('id', id);
+  if (action === 'rejected' && !response) return setMessage('admin-message', 'Indica el motivo del rechazo para informárselo al usuario.', true);
+  const startInput = $(`#start-${CSS.escape(id)}`)?.value;
+  const endInput = $(`#end-${CSS.escape(id)}`)?.value;
+  if (action !== 'rejected' && (!startInput || !endInput || new Date(endInput) <= new Date(startInput))) return setMessage('admin-message', 'Indica un horario válido: el fin debe ser posterior al inicio.', true);
+  const { error } = await supabase.rpc('admin_decide_service_request', {
+    p_request_id: id,
+    p_action: action,
+    p_starts_at: startInput ? new Date(startInput).toISOString() : null,
+    p_ends_at: endInput ? new Date(endInput).toISOString() : null,
+    p_message: response
+  });
   if (error) return setMessage('admin-message', friendlyError(error), true);
   await loadAdminData();
-  setMessage('admin-message', status === 'approved' ? 'Solicitud aceptada.' : 'Solicitud rechazada.');
+  setMessage('admin-message', action === 'approved' ? 'Horario confirmado y añadido al calendario.' : action === 'change_pending' ? 'Cambio propuesto; el usuario debe aceptarlo.' : 'Solicitud rechazada y motivo enviado.');
 }
 
 function renderRequestOptions() {
@@ -663,7 +693,11 @@ async function boot() {
     return;
   }
   try {
-    const user = await currentUser();
+    let user = await currentUser();
+    if (String(user?.email || '').toLowerCase() === 'administrador@grsports.com' && user.app_metadata?.role !== 'admin') {
+      const { data, error: refreshError } = await supabase.auth.refreshSession();
+      if (!refreshError && data.user) user = data.user;
+    }
     await renderNavigation(user);
     const page = document.body.dataset.page;
     if (page === 'auth') await initAuth(user);
